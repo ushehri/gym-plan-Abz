@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My Gym Plan">
+<title>Abdullah's Gym Plan</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --purple: #534AB7; --purple-light: #EEEDFE; --purple-dark: #3C3489;
+    --green: #0F6E56; --green-light: #E1F5EE; --green-dark: #085041;
+    --bg: #F2F2F7; --card: #FFFFFF; --text: #1A1A1A;
+    --text-sec: #666; --text-ter: #999;
+    --border: rgba(0,0,0,0.08); --radius: 14px; --radius-sm: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111; --card: #1E1E1E; --text: #F0F0F0;
+      --text-sec: #AAA; --text-ter: #555;
+      --border: rgba(255,255,255,0.09);
+      --purple-light: #26215C; --purple-dark: #AFA9EC;
+      --green-light: #04342C; --green-dark: #9FE1CB;
+    }
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 3rem; }
+
+  .top-bar { background: var(--purple); padding: 52px 20px 20px; color: white; }
+  .top-bar h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; }
+  .top-bar p { font-size: 13px; opacity: 0.72; margin-top: 4px; }
+
+  .week-strip { display: flex; overflow-x: auto; gap: 8px; padding: 14px 16px 6px; scrollbar-width: none; }
+  .week-strip::-webkit-scrollbar { display: none; }
+
+  .day-btn { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 13px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--card); cursor: pointer; -webkit-tap-highlight-color: transparent; transition: all 0.15s; }
+  .day-btn .dlabel { font-size: 10px; color: var(--text-ter); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+  .day-btn .dletter { font-size: 17px; font-weight: 700; color: var(--text); }
+  .day-btn .ddot { width: 5px; height: 5px; border-radius: 50%; background: transparent; }
+  .day-btn.active { background: var(--purple); border-color: var(--purple); }
+  .day-btn.active .dlabel { color: rgba(255,255,255,0.65); }
+  .day-btn.active .dletter { color: #fff; }
+  .day-btn.active .ddot { background: rgba(255,255,255,0.5); }
+  .day-btn.is-rest .ddot { background: var(--text-ter); }
+  .day-btn.is-rest.active { background: var(--card); border-color: var(--border); }
+  .day-btn.is-rest.active .dlabel { color: var(--text-ter); }
+  .day-btn.is-rest.active .dletter { color: var(--text-sec); }
+  .day-btn.is-cardio .ddot { background: #1D9E75; }
+  .day-btn.is-cardio.active { background: var(--green); border-color: var(--green); }
+  .day-btn.is-cardio.active .dlabel { color: rgba(255,255,255,0.65); }
+  .day-btn.is-cardio.active .dletter { color: #fff; }
+
+  .content { padding: 10px 16px 0; }
+
+  .focus-card { background: var(--purple); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 6px; }
+  .focus-card .fc-day { font-size: 12px; color: rgba(255,255,255,0.6); font-weight: 500; }
+  .focus-card .fc-name { font-size: 21px; font-weight: 700; color: #fff; margin-top: 2px; }
+
+  .cardio-focus-card { background: var(--green); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 6px; }
+  .cardio-focus-card .fc-day { font-size: 12px; color: rgba(255,255,255,0.6); font-weight: 500; }
+  .cardio-focus-card .fc-name { font-size: 21px; font-weight: 700; color: #fff; margin-top: 2px; }
+
+  .sec-label { font-size: 11px; font-weight: 700; color: var(--text-ter); text-transform: uppercase; letter-spacing: 0.09em; margin: 18px 0 8px; }
+
+  .muscles-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+  .muscle-chip { font-size: 12px; padding: 4px 11px; border-radius: 20px; background: var(--purple-light); color: var(--purple-dark); font-weight: 600; }
+
+  .ex-card { background: var(--card); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; border: 1px solid var(--border); }
+  .ex-body { padding: 14px 14px 0; }
+  .ex-name { font-size: 15px; font-weight: 700; color: var(--text); }
+  .ex-note { font-size: 12px; color: var(--text-sec); margin-top: 3px; line-height: 1.45; }
+  .ex-meta-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px 0; }
+  .ex-sets { font-size: 14px; font-weight: 700; color: var(--text); }
+  .ex-weight { font-size: 13px; color: var(--purple); font-weight: 700; }
+  .ex-bar { height: 3px; background: var(--purple-light); margin: 10px 14px 12px; border-radius: 2px; overflow: hidden; }
+  .ex-bar-fill { height: 100%; background: var(--purple); border-radius: 2px; }
+
+  .cardio-card { background: var(--card); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; border: 1px solid var(--border); }
+  .cardio-body { padding: 14px 14px 0; }
+  .cardio-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; background: var(--green); color: #fff; margin-bottom: 6px; }
+  .cardio-name { font-size: 15px; font-weight: 700; color: var(--text); }
+  .cardio-note { font-size: 12px; color: var(--text-sec); margin-top: 3px; line-height: 1.45; }
+  .cardio-meta-row { display: flex; justify-content: space-between; padding: 10px 14px 0; }
+  .cardio-duration { font-size: 14px; font-weight: 700; color: var(--text); }
+  .cardio-intensity { font-size: 13px; color: var(--green); font-weight: 700; }
+  .cardio-bar { height: 3px; background: var(--green-light); margin: 10px 14px 12px; border-radius: 2px; overflow: hidden; }
+  .cardio-bar-fill { height: 100%; background: #1D9E75; border-radius: 2px; }
+
+  .tip-box { border-radius: var(--radius); padding: 13px 15px; margin-top: 6px; display: flex; gap: 10px; align-items: flex-start; }
+  .tip-box.purple { background: var(--purple-light); }
+  .tip-box.green { background: var(--green-light); }
+  .tip-icon { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
+  .tip-text { font-size: 13px; line-height: 1.55; }
+  .tip-box.purple .tip-text { color: var(--purple-dark); }
+  .tip-box.green .tip-text { color: var(--green-dark); }
+
+  .rest-view { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 3rem 1rem; }
+  .rest-emoji { font-size: 52px; margin-bottom: 16px; }
+  .rest-title { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .rest-desc { font-size: 14px; color: var(--text-sec); max-width: 300px; line-height: 1.65; }
+
+  .footer { margin-top: 22px; font-size: 12px; color: var(--text-ter); text-align: center; line-height: 1.65; padding-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1>Abdullah's Gym Plan</h1>
+  <p>87 kg · 169 cm · Goal: shredded · Keto · Ankle-safe</p>
+</div>
+
+<div class="week-strip" id="strip"></div>
+<div class="content" id="content"></div>
+
+<script>
+const days = [
+  {
+    short: "Mon", name: "Monday", type: "workout",
+    focus: "Chest & Triceps",
+    muscles: ["Upper chest", "Mid chest", "Lower chest", "Triceps", "Front delts"],
+    exercises: [
+      { name: "Chest press machine", note: "Controlled push, full extension — don't lock elbows at top", sets: "3 × 12", weight: "30 kg", pct: 55 },
+      { name: "Incline dumbbell press", note: "45° incline bench — targets upper chest specifically", sets: "3 × 12", weight: "10 kg each", pct: 40 },
+      { name: "Pec deck / chest fly machine", note: "Squeeze chest at centre, slow controlled return", sets: "3 × 15", weight: "25 kg", pct: 48 },
+      { name: "Cable tricep pushdown", note: "Rope or straight bar — keep elbows locked at your sides", sets: "3 × 15", weight: "15 kg", pct: 35 },
+      { name: "Overhead dumbbell tricep extension", note: "Both hands grip one dumbbell overhead, lower behind head", sets: "3 × 12", weight: "12 kg", pct: 30 },
+    ],
+    tip: "On keto, energy may feel lower early in a session. Warm up 5 mins with light cable work before your first set."
+  },
+  {
+    short: "Tue", name: "Tuesday", type: "workout",
+    focus: "Back & Biceps",
+    muscles: ["Lats", "Mid back", "Lower traps", "Biceps", "Rear delts"],
+    exercises: [
+      { name: "Lat pulldown machine", note: "Wide grip, pull bar to upper chest — lead with elbows", sets: "3 × 12", weight: "35 kg", pct: 60 },
+      { name: "Seated cable row", note: "Neutral grip, keep chest up and elbows pulling back", sets: "3 × 12", weight: "30 kg", pct: 55 },
+      { name: "Chest-supported row machine", note: "Chest rests on pad — eliminates lower back strain completely", sets: "3 × 12", weight: "25 kg", pct: 48 },
+      { name: "Dumbbell bicep curl", note: "Supinate (rotate) wrist at the top for full contraction", sets: "3 × 12", weight: "10 kg each", pct: 35 },
+      { name: "Hammer curl", note: "Neutral grip (thumbs up) — hits the brachialis for arm thickness", sets: "3 × 12", weight: "10 kg each", pct: 35 },
+    ],
+    tip: "Think of your hands as hooks, not the pulling force. Feel the lats stretch at the top — most beginners rely too much on their arms."
+  },
+  {
+    short: "Wed", name: "Wednesday", type: "cardio",
+    focus: "Cardio Day",
+    cardio: [
+      { badge: "Best for you", name: "Stationary bike", note: "Zero ankle stress — top pick given your ankle history", duration: "25 min", intensity: "Low–moderate", pct: 50 },
+      { badge: "Alternative", name: "Rowing machine", note: "Full body cardio — no ankle load at all, great fat burner", duration: "20 min", intensity: "Low–moderate", pct: 45 },
+      { badge: "Alternative", name: "Elliptical trainer", note: "Low impact gliding motion — ankle stays completely stable", duration: "25 min", intensity: "Low–moderate", pct: 48 },
+    ],
+    tip: "On keto, low-to-moderate cardio is ideal — your body is already fat-adapted. Keep heart rate around 120–135 bpm. No need to push hard."
+  },
+  {
+    short: "Thu", name: "Thursday", type: "workout",
+    focus: "Shoulders & Abs",
+    muscles: ["Front delts", "Side delts", "Rear delts", "Traps", "Core / abs"],
+    exercises: [
+      { name: "Shoulder press machine", note: "Machine keeps it stable — push straight up, control the return", sets: "3 × 12", weight: "20 kg", pct: 42 },
+      { name: "Dumbbell lateral raise", note: "Slight bend in elbow, raise to shoulder height — lead with your elbow", sets: "3 × 15", weight: "6 kg each", pct: 25 },
+      { name: "Cable rear delt fly", note: "Low pulley, cross cable — pull across body, both sides", sets: "3 × 15", weight: "8 kg", pct: 28 },
+      { name: "Cable face pull", note: "Rope at face height — pull to forehead, elbows high and wide", sets: "3 × 15", weight: "12 kg", pct: 32 },
+      { name: "Cable crunch (kneeling)", note: "Rope overhead, kneel facing machine — crunch elbows to knees", sets: "3 × 15", weight: "15 kg", pct: 35 },
+      { name: "Plank", note: "Forearms on floor, body straight — hold without sagging hips", sets: "3 × 30 sec", weight: "Bodyweight", pct: 20 },
+    ],
+    tip: "Shoulders are small muscles — starting light is smart. Lateral raises are the most common ego-injury in the gym."
+  },
+  {
+    short: "Fri", name: "Friday", type: "cardio",
+    focus: "Cardio Day",
+    cardio: [
+      { badge: "Best for you", name: "Stationary bike", note: "Zero ankle stress — top pick given your ankle history", duration: "25 min", intensity: "Low–moderate", pct: 50 },
+      { badge: "Alternative", name: "Rowing machine", note: "Full body cardio — no ankle load at all, great fat burner", duration: "20 min", intensity: "Low–moderate", pct: 45 },
+      { badge: "Alternative", name: "Elliptical trainer", note: "Low impact gliding motion — ankle stays completely stable", duration: "25 min", intensity: "Low–moderate", pct: 48 },
+    ],
+    tip: "Same as Wednesday — pick any one machine and keep the pace comfortable. Fat burning happens here without stressing your muscles."
+  },
+  {
+    short: "Sat", name: "Saturday", type: "workout",
+    focus: "Legs & Glutes",
+    muscles: ["Quads", "Hamstrings", "Glutes", "Inner thighs", "Calves"],
+    exercises: [
+      { name: "Leg press machine", note: "Feet mid-platform — ankle stays completely neutral", sets: "3 × 12", weight: "40 kg", pct: 65 },
+      { name: "Leg extension machine", note: "Isolates quads only — zero ankle stress, fully seated", sets: "3 × 15", weight: "25 kg", pct: 48 },
+      { name: "Lying leg curl machine", note: "Lie face down — hamstrings only, fully supported", sets: "3 × 15", weight: "20 kg", pct: 42 },
+      { name: "Hip abductor machine", note: "Sit, push knees outward — outer glutes and hips", sets: "3 × 15", weight: "30 kg", pct: 52 },
+      { name: "Hip adductor machine", note: "Sit, push knees inward — inner thighs and groin area", sets: "3 × 15", weight: "25 kg", pct: 48 },
+      { name: "Seated calf raise machine", note: "Seated position = far less ankle joint pressure than standing", sets: "3 × 15", weight: "15 kg", pct: 35 },
+    ],
+    tip: "With your ankle history, avoid deep squats or lunges for now. Every exercise here is machine-based with zero ankle instability risk."
+  },
+  {
+    short: "Sun", name: "Sunday", type: "rest",
+    focus: "Full Rest",
+    tip: "Full rest day — no gym, no cardio. This is when your muscles actually repair and tone. Optional: a slow 20 min flat walk if you feel restless, but it's not required."
+  }
+];
+
+const todayIdx = [1,2,3,4,5,6,0].indexOf(new Date().getDay());
+let active = todayIdx >= 0 ? todayIdx : 0;
+
+function renderStrip() {
+  document.getElementById('strip').innerHTML = days.map((d,i) => {
+    const cls = d.type === 'cardio' ? 'is-cardio' : d.type === 'rest' ? 'is-rest' : '';
+    const letter = d.type === 'cardio' ? '🚴' : d.short[0];
+    return `<button class="day-btn ${cls} ${i===active?'active':''}" onclick="sel(${i})">
+      <span class="dlabel">${d.short}</span>
+      <span class="dletter">${letter}</span>
+      <span class="ddot"></span>
+    </button>`;
+  }).join('');
+}
+
+function renderContent() {
+  const d = days[active];
+  const el = document.getElementById('content');
+
+  if (d.type === 'rest') {
+    el.innerHTML = `<div class="rest-view">
+      <div class="rest-emoji">😴</div>
+      <div class="rest-title">Full Rest Day</div>
+      <div class="rest-desc">${d.tip}</div>
+    </div>`;
+    return;
+  }
+
+  if (d.type === 'cardio') {
+    const cards = d.cardio.map(c => `
+      <div class="cardio-card">
+        <div class="cardio-body">
+          <span class="cardio-badge">${c.badge}</span>
+          <div class="cardio-name">${c.name}</div>
+          <div class="cardio-note">${c.note}</div>
+        </div>
+        <div class="cardio-meta-row">
+          <div class="cardio-duration">${c.duration}</div>
+          <div class="cardio-intensity">${c.intensity}</div>
+        </div>
+        <div class="cardio-bar"><div class="cardio-bar-fill" style="width:${c.pct}%"></div></div>
+      </div>`).join('');
+
+    el.innerHTML = `
+      <div class="cardio-focus-card">
+        <div class="fc-day">${d.name}</div>
+        <div class="fc-name">${d.focus}</div>
+      </div>
+      <div class="sec-label">Choose one machine</div>
+      ${cards}
+      <div class="tip-box green">
+        <div class="tip-icon">💡</div>
+        <div class="tip-text">${d.tip}</div>
+      </div>
+      <div class="footer">Pick whichever machine feels best that day.<br>Consistency matters more than which one you choose.</div>`;
+    return;
+  }
+
+  const chips = d.muscles.map(m => `<span class="muscle-chip">${m}</span>`).join('');
+  const exCards = d.exercises.map(e => `
+    <div class="ex-card">
+      <div class="ex-body">
+        <div class="ex-name">${e.name}</div>
+        <div class="ex-note">${e.note}</div>
+      </div>
+      <div class="ex-meta-row">
+        <div class="ex-sets">${e.sets}</div>
+        <div class="ex-weight">${e.weight}</div>
+      </div>
+      <div class="ex-bar"><div class="ex-bar-fill" style="width:${e.pct}%"></div></div>
+    </div>`).join('');
+
+  el.innerHTML = `
+    <div class="focus-card">
+      <div class="fc-day">${d.name}</div>
+      <div class="fc-name">${d.focus}</div>
+    </div>
+    <div class="sec-label">Muscles trained</div>
+    <div class="muscles-row">${chips}</div>
+    <div class="sec-label">Exercises</div>
+    ${exCards}
+    <div class="tip-box purple">
+      <div class="tip-icon">💡</div>
+      <div class="tip-text">${d.tip}</div>
+    </div>
+    <div class="footer">Come back to Claude when you're ready to increase weights.<br>Starting weights are intentionally conservative.</div>`;
+}
+
+function sel(i) { active = i; renderStrip(); renderContent(); }
+renderStrip();
+renderContent();
+</script>
+</body>
+</html>
